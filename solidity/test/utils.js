@@ -15,5 +15,31 @@ module.exports = {
   concatenateHeadersHexes: function concatenateHeadersHexes(arr) {
     const hexes = arr.map(_arr => _arr.hex);
     return this.concatenateHexStrings(hexes);
+  },
+  parseTestVector: function parseTestVector(str) {
+    const lines = str.split(/\r\n|\r|\n/);
+    const anchorHeigth = parseInt(lines[1].split(" ")[5]);
+    const anchorParentTime = parseInt(lines[2].split(" ")[6]);
+    const anchorNBits = lines[3].split(" ")[5];
+    const startHeigth = parseInt(lines[4].split(" ")[5]);
+    const startTime = parseInt(lines[5].split(" ")[5]);
+    const cases = lines.filter(l => !l.includes("#") && l.length > 2);
+    const parsedCases = cases.map(c => {
+      c = c.split(" ");
+      return {
+        iter: parseInt(c[0]),
+        heigth: parseInt(c[1]),
+        time: parseInt(c[2]),
+        target: c[3],
+      }
+    });
+    return {
+      anchorHeigth: anchorHeigth,
+      anchorParentTime: anchorParentTime,
+      anchorNBits: anchorNBits,
+      startHeigth: startHeigth,
+      startTime: startTime,
+      cases: parsedCases
+    }
   }
 };
