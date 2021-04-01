@@ -18,18 +18,18 @@ module.exports = {
   },
   parseTestVector: function parseTestVector(str) {
     const lines = str.split(/\r\n|\r|\n/);
-    const anchorHeigth = parseInt(lines[1].split(" ")[5]);
-    const anchorParentTime = parseInt(lines[2].split(" ")[6]);
+    const anchorHeigth = BigInt(lines[1].split(" ")[5]);
+    const anchorParentTime = BigInt(lines[2].split(" ")[6]);
     const anchorNBits = lines[3].split(" ")[5];
-    const startHeigth = parseInt(lines[4].split(" ")[5]);
-    const startTime = parseInt(lines[5].split(" ")[5]);
+    const startHeigth = BigInt(lines[4].split(" ")[5]);
+    const startTime = BigInt(lines[5].split(" ")[5]);
     const cases = lines.filter(l => !l.includes("#") && l.length > 2);
     const parsedCases = cases.map(c => {
       c = c.split(" ");
       return {
         iter: parseInt(c[0]),
-        heigth: parseInt(c[1]),
-        time: parseInt(c[2]),
+        heigth: BigInt(c[1]),
+        time: BigInt(c[2]),
         target: c[3],
       }
     });
