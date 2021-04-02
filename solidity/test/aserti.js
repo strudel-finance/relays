@@ -83,10 +83,6 @@ function nextTarget(
   const heightDelta = BigInt(currentHeigth) - BigInt(anchorHeigth);
   let exponent = ((timeDelta - idealBlockTime * (heightDelta + 1n)) * radix) / halflife;
 
-    console.log(exponent);
-  
-
-  
   const numShifts = exponent >> 16n;
   exponent = exponent - numShifts * radix;
 

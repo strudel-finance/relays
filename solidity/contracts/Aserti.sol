@@ -25,28 +25,26 @@ contract Aserti {
                       uint256 anchorNBits,
                       int256 currentHeigth,
                       int256 currentTime
-                      ) external pure returns (uint256,int256) {
+                      ) external pure returns (uint256) {
 
-    int256 debug;
-    
     uint256 maxTarget = bitsToTarget(MAX_BITS);
     uint256 anchorTarget = bitsToTarget(anchorNBits);
+    
     int256 timeDelta = currentTime - anchorParentTime;
     int256 heigthDelta = currentHeigth - anchorHeigth;
 
-    // these 2 can be negative for sure
     int256 exponent =
       ((timeDelta - IDEAL_BLOCK_TIME * (heigthDelta + 1)) * RADIX) / HALFLIFE;
-    debug = exponent;
     int256 numShifts = exponent >> 16;
     exponent = exponent - numShifts * RADIX;
 
-    // can factor be negative??
+    // I think factor can be negative...
     int256 factor =
       ((195766423245049 * exponent + 971821376 * exponent * exponent +
         5127 * exponent * exponent * exponent + 2 ** 47) >> 48) + RADIX;
 
-    int256 nextTarget = int256(anchorTarget) * factor;
+    // if factor is negative, is this cast a problem?
+    uint256 nextTarget = anchorTarget * uint256(factor);
 
     if (numShifts < 0) {
       nextTarget = nextTarget >> (-numShifts);
@@ -57,13 +55,13 @@ contract Aserti {
     nextTarget = nextTarget >> 16;
 
     if (nextTarget == 0) {
-      return (1, debug);
+      return 1;
     }
 
-    if (uint256(nextTarget) > maxTarget) {
-      return (maxTarget, debug);
+    if (nextTarget > maxTarget) {
+      return maxTarget;
     }
     
-    return (uint256(nextTarget), debug);
+    return nextTarget;
   }
 }

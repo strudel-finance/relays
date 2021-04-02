@@ -51,8 +51,7 @@ const runNextTargetTests = (nt) => {
   }
 }
 
-contract('Target', async () => {
-// describe('Target', async () => {
+contract('Aserti', async () => {
   
   describe('JS implementation', async () => {
 
@@ -65,7 +64,7 @@ contract('Target', async () => {
     });
     
     runBitsToTargetTest(bitsToTarget);
-    // runNextTargetTests(nextTarget);
+    runNextTargetTests(nextTarget);
   });
 
   describe('Solidity implementation', async () => {
@@ -101,52 +100,10 @@ contract('Target', async () => {
         currentTime
       );
 
-      return BigInt('0x' + res['0'].toString('hex'));
+      return BigInt('0x' + res.toString('hex'));
     }
 
     runBitsToTargetTest(bitsToTargetSol);
     runNextTargetTests(nextTargetSol);
-    
-    it('test1', async () => {
-      // console.log(bits, target);
-      // uint256 returns BN instance...
-      let res = await instance.bitsToTarget.call(bits);
-      // console.log(res.toString('hex'));
-    });
-
-    it('test2', async () => {
-      const testVectors = getTestVectors();
-      const testVector = testVectors[1];
-
-      const anchorHeigth = '0x' + testVector.anchorHeigth.toString(16);
-      const anchorParentTime = '0x' + testVector.anchorParentTime.toString(16);
-      const anchorNBits = testVector.anchorNBits;
-
-      const case0 = testVector.cases[0];
-      const currentHeigth = '0x' + case0.heigth.toString(16);
-      const currentTime = '0x' + case0.time.toString(16);
-
-      let res = await instance.nextTarget.call(
-        anchorHeigth,
-        anchorParentTime,
-        anchorNBits,
-        currentHeigth,
-        currentTime
-      );
-
-      let js = nextTarget(
-        testVector.anchorHeigth,
-        testVector.anchorParentTime,
-        testVector.anchorNBits,
-        case0.heigth,
-        case0.time
-      );
-
-      const resBits = targetToBits(BigInt('0x' + res['0'].toString('hex'))).toString(16);
-      const debug = BigInt('0x' + res['1'].toString('hex'));
-      console.log("Debug:", debug);
-      console.log("Test:", case0.target);
-      console.log("Mine:", "0x" + resBits);
-    });
   });
 });
