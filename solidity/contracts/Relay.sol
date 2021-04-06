@@ -158,12 +158,7 @@ contract Relay is IRelay {
         /// Extract basic info
         bytes32 _previousDigest = _anchor.hash256();
         uint256 _anchorHeight = _findHeight(_previousDigest);  /* NB: errors if unknown */
-        uint256 _target = _headers.indexHeaderArray(0).target();
-
-        /* require( */
-        /*     _internal || _anchor.target() == _target, */
-        /*     "Unexpected retarget on external call" */
-        /* ); */
+        uint256 _previousTime = _anchor.time();
 
         /*
         NB:
@@ -174,11 +169,14 @@ contract Relay is IRelay {
         */
         uint256 _height;
         bytes32 _currentDigest;
+        uint256 _target;
+        uint256 _expectedTarget;
         for (uint256 i = 0; i < _headers.len() / 80; i += 1) {
             bytes29 _header = _headers.indexHeaderArray(i);
+            _target = _header.target();
             _height = _anchorHeight.add(i + 1);
             _currentDigest = _header.hash256();
-
+            
             /*
             NB:
             if the block is already authenticated, we don't need to a work check
@@ -198,11 +196,19 @@ contract Relay is IRelay {
                 }
             }
 
+            _expectedTarget = _nextTarget(int(anchorHeight),
+                                          int(anchorParentTime),
+                                          anchorNBits,
+                                          int(_height.sub(1)),
+                                          int(_previousTime));
+            require((_target & _expectedTarget) == _target,
+                    "Invalid retarget provided");
+
             /* NB: we do still need to make chain level checks tho */
-            require(_header.target() == _target, "Target changed unexpectedly");
             require(_header.checkParent(_previousDigest), "Headers do not form a consistent chain");
 
             _previousDigest = _currentDigest;
+            _previousTime = _header.time();
         }
 
         emit Extension(
@@ -210,57 +216,6 @@ contract Relay is IRelay {
             _currentDigest);
         return true;
     }
-
-    /// @notice                       Adds headers to storage, performs additional validation of retarget
-    /// @dev                          Checks the retarget, the heights, and the linkage
-    /// @param  _oldStart             The first header in the difficulty period being closed
-    /// @param  _oldEnd               The last header in the difficulty period being closed
-    /// @param  _headers              A tightly-packed list of 80-byte Bitcoin headers
-    /// @return                       True if successfully written, error otherwise
-    /* function _addHeadersWithRetarget( */
-    /*     bytes29 _oldStart, */
-    /*     bytes29 _oldEnd, */
-    /*     bytes29 _headers */
-    /* ) internal returns (bool) { */
-
-    /*     /\* NB: requires that both blocks are known *\/ */
-    /*     uint256 _startHeight = _findHeight(_oldStart.hash256()); */
-    /*     uint256 _endHeight = _findHeight(_oldEnd.hash256()); */
-
-    /*     /\* NB: retargets should happen at 2016 block intervals *\/ */
-    /*     require( */
-    /*         _endHeight % 2016 == 2015, */
-    /*         "Must provide the last header of the closing difficulty period"); */
-    /*     require( */
-    /*         _endHeight == _startHeight.add(2015), */
-    /*         "Must provide exactly 1 difficulty period"); */
-    /*     require( */
-    /*         _oldStart.diff() == _oldEnd.diff(), */
-    /*         "Period header difficulties do not match"); */
-
-    /*     /\* NB: This comparison looks weird because header nBits encoding truncates targets *\/ */
-    /*     bytes29 _newStart = _headers.indexHeaderArray(0); */
-    /*     uint256 _actualTarget = _newStart.target(); */
-    /*     uint256 _expectedTarget = ViewBTC.retargetAlgorithm( */
-    /*         _oldStart.target(), */
-    /*         _oldStart.time(), */
-    /*         _oldEnd.time() */
-    /*     ); */
-    /*     require( */
-    /*         (_actualTarget & _expectedTarget) == _actualTarget, */
-    /*         "Invalid retarget provided"); */
-
-    /*     // If the current known prevEpochDiff doesn't match, and this old period is near the chaintip/ */
-    /*     // update the stored prevEpochDiff */
-    /*     // Don't update if this is a deep past epoch */
-    /*     uint256 _oldDiff = _oldStart.diff(); */
-    /*     if (prevEpochDiff != _oldDiff && _endHeight > _findHeight(bestKnownDigest).sub(2016)) { */
-    /*         prevEpochDiff = _oldDiff; */
-    /*     } */
-
-    /*     // Pass all but the first through to be added */
-    /*     return _addHeaders(_oldEnd, _headers, true); */
-    /* } */
 
     /// @notice         Finds the height of a header by its digest
     /// @dev            Will fail if the header is unknown
@@ -496,36 +451,39 @@ contract Relay is IRelay {
     }
 }
 
-/* // For unittests */
-/* contract TestRelay is Relay { */
+// For unittests
+contract TestRelay is Relay {
 
-/*     /// @notice                   Gives a starting point for the relay */
-/*     /// @dev                      We don't check this AT ALL really. Don't use relays with bad genesis */
-/*     /// @param  _genesisHeader    The starting header */
-/*     /// @param  _height           The starting height */
-/*     /// @param  _periodStart      The hash of the first header in the genesis epoch */
-/*     constructor(bytes memory _genesisHeader, uint256 _height) */
-/*         Relay(_genesisHeader, _height) */
-/*     public {} */
+    /// @notice                   Gives a starting point for the relay
+    /// @dev                      We don't check this AT ALL really. Don't use relays with bad genesis
+    /// @param  _genesisHeader    The starting header
+    /// @param  _height           The starting height
+    constructor(bytes memory _genesisHeader,
+                uint256 _height,
+                uint256 _anchorHeight,
+                uint256 _anchorParentTime,
+                uint256 _anchorNBits)
+      Relay(_genesisHeader, _height, _anchorHeight, _anchorParentTime, _anchorNBits)
+    public {}
 
-/*     function heaviestFromAncestor( */
-/*         bytes32 _ancestor, */
-/*         bytes calldata _left, */
-/*         bytes calldata _right */
-/*     ) external view returns (bytes32) { */
-/*         return _heaviestFromAncestor( */
-/*             _ancestor, */
-/*             _left.ref(0).tryAsHeader(), */
-/*             _right.ref(0).tryAsHeader() */
-/*         ); */
-/*     } */
+    function heaviestFromAncestor(
+        bytes32 _ancestor,
+        bytes calldata _left,
+        bytes calldata _right
+    ) external view returns (bytes32) {
+        return _heaviestFromAncestor(
+            _ancestor,
+            _left.ref(0).tryAsHeader(),
+            _right.ref(0).tryAsHeader()
+        );
+    }
 
-/*     function isMostRecentAncestor( */
-/*         bytes32 _ancestor, */
-/*         bytes32 _left, */
-/*         bytes32 _right, */
-/*         uint256 _limit */
-/*     ) external view returns (bool) { */
-/*         return _isMostRecentAncestor(_ancestor, _left, _right, _limit); */
-/*     } */
-/* } */
+    function isMostRecentAncestor(
+        bytes32 _ancestor,
+        bytes32 _left,
+        bytes32 _right,
+        uint256 _limit
+    ) external view returns (bool) {
+        return _isMostRecentAncestor(_ancestor, _left, _right, _limit);
+    }
+}

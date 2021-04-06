@@ -2,8 +2,8 @@
 const BN = require('bn.js');
 const utils = require('./utils.js');
 const REGULAR_CHAIN = require('./bchData.json');
-const RETARGET_CHAIN = require('./headersWithRetarget.json');
-const REORG_AND_RETARGET_CHAIN = require('./headersReorgAndRetarget.json');
+const ANCHOR = require('./anchorData.json');
+// const REORG_AND_RETARGET_CHAIN = require('./headersReorgAndRetarget.json');
 
 const Relay = artifacts.require('TestRelay');
 
@@ -13,12 +13,15 @@ contract('Relay', async () => {
   describe('#constructor', async () => {
     /* eslint-disable-next-line camelcase */
     const { genesis } = REGULAR_CHAIN;
+    const { anchorHeigth, anchorParentTime, anchorNBits } = ANCHOR;
 
     before(async () => {
       instance = await Relay.new(
         genesis.hex,
         genesis.height,
-        genesis.digest_le,
+        anchorHeigth,
+        anchorParentTime,
+        anchorNBits,
       );
     });
 
@@ -27,24 +30,13 @@ contract('Relay', async () => {
         await Relay.new(
           '0x00',
           genesis.height,
-          genesis.digest_le,
+          anchorHeigth,
+          anchorParentTime,
+          anchorNBits,
         );
         assert(false, 'expected an error');
       } catch (e) {
         assert.include(e.message, 'Stop being dumb');
-      }
-    });
-
-    it('errors if the period start is in wrong byte order', async () => {
-      try {
-        await Relay.new(
-          genesis.hex,
-          genesis.height,
-          genesis.digest
-        );
-        assert(false, 'expected an error');
-      } catch (e) {
-        assert.include(e.message, 'Hint: wrong byte order?');
       }
     });
 
@@ -63,13 +55,6 @@ contract('Relay', async () => {
 
       res = await instance.findHeight.call(genesis.digest_le);
       assert(res.eqn(genesis.height));
-
-      const genDiff = new BN(genesis.difficulty);
-      res = await instance.getCurrentEpochDifficulty();
-      assert(res.eq(genDiff));
-
-      res = await instance.getPrevEpochDifficulty();
-      assert(res.eqn(0));
     });
   });
 
@@ -77,6 +62,7 @@ contract('Relay', async () => {
     /* eslint-disable-next-line camelcase */
     const { chain, genesis } = REGULAR_CHAIN;
     const headerHex = chain.map(header => header.hex);
+    const { anchorHeigth, anchorParentTime, anchorNBits } = ANCHOR;
 
     const headers = utils.concatenateHexStrings(headerHex.slice(0, 6));
 
@@ -84,7 +70,9 @@ contract('Relay', async () => {
       instance = await Relay.new(
         genesis.hex,
         genesis.height,
-        genesis.digest_le
+        anchorHeigth,
+        anchorParentTime,
+        anchorNBits,
       );
     });
 
