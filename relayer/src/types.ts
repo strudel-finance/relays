@@ -8,6 +8,7 @@ export type Config = {
   relayAddress: string,
   ethRpc: string,
   limit: number,
+  interval: number,
 }
 
 export type AddHeaders = {

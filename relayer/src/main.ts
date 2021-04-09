@@ -13,9 +13,10 @@ const CONFIG: Config = {
   speed: "fast",
   bchEndpoint: "bchd.strudel.finance",
   bchPort: 8332,
-  relayAddress: "0x72677605c1F5593cFD5e9E5248902EA51d880b90",
-  ethRpc: "http://localhost:7545",
+  relayAddress: "0x9cb9CF602B09e6c8c8B4A9Abd688d1cEe3F1c7a7",
+  ethRpc: "https://rpc.xdaichain.com/",
   limit: 50,
+  interval: 5,
 }
 
 const log = (msg: string) => {
@@ -72,7 +73,7 @@ async function main() {
     } catch (e) {
       log(e);
     }
-    await sleep(5);
+    await sleep(CONFIG.interval);
   }
 }
 

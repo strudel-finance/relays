@@ -38,6 +38,16 @@ module.exports = {
     },
 
     ropsten: ropsten,
+    xdai: {
+      provider: function() {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://rpc.xdaichain.com/")
+      },
+      network_id: 100,
+      gas: 5000000,
+      gasPrice: 1000000000
+    },
   },
 
   compilers: {
