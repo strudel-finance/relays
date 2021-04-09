@@ -14,6 +14,7 @@ declare module 'bitcoin-core' {
     constructor(options: Options): Client;
     async getBestBlockHash(): Promise<string>;
     async getBlockHeader(block: string): Promise<Header>;
+    async getBlockHeader(block: number): Promise<Header>;
     async getBlockHeader(blockNum: number, verbose: boolean): Promise<string>;
   };
   export default Client;

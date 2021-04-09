@@ -7,9 +7,15 @@ export type Config = {
   bchPort: number,
   relayAddress: string,
   ethRpc: string,
+  limit: number,
 }
 
 export type AddHeaders = {
   anchor: string,
   chain: string,
+  newBest: string,
+}
+
+export type Tx = {
+  hash: string,
 }

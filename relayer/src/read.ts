@@ -27,6 +27,24 @@ const getBchHeight = async (client: Client, block: string): Promise<number> => {
   return header.height;
 }
 
+export const getBchBlock = async (
+  client: Client,
+  relay: Contract,
+  ethBlock: string,
+  limit: number
+): Promise<string> => {
+  const bestBchBlock = await client.getBestBlockHash();
+
+  const ethHeigth = (await relay.findHeight(ethBlock)).toNumber();
+  const bchHeigth = await getBchHeight(client, bestBchBlock);
+  const delta = bchHeigth - ethHeigth;
+
+  if (delta < limit) return bestBchBlock;
+
+  const limitBlock = (await client.getBlockHeader(ethHeigth + limit - 3)).hash;
+  return limitBlock;
+}
+
 // assumes bch chain always has higher block number
 // return bch format, inputs are their own formats
 export const getCommonAncestor = async (
@@ -64,5 +82,6 @@ export const getMissingData = async (client: Client, start: string, end: string)
   return {
     anchor: "0x" + headers[0],
     chain: "0x" + headers.slice(1).reduce((cv, acc) => cv + acc, ""),
+    newBest: "0x" + headers[headers.length - 1],
   };
 }
