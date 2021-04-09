@@ -15,5 +15,5 @@ module.exports = {
   concatenateHeadersHexes: function concatenateHeadersHexes(arr) {
     const hexes = arr.map(_arr => _arr.hex);
     return this.concatenateHexStrings(hexes);
-  }
+  },
 };
