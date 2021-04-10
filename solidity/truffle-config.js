@@ -48,6 +48,16 @@ module.exports = {
       gas: 5000000,
       gasPrice: 1000000000
     },
+    bsc: {
+      provider: function() {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://bsc-dataseed.binance.org/")
+      },
+      network_id: 56,
+      gas: 5000000,
+      gasPrice: 5000000000
+    },
   },
 
   compilers: {

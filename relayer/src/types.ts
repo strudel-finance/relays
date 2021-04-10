@@ -9,6 +9,7 @@ export type Config = {
   ethRpc: string,
   limit: number,
   interval: number,
+  gasPrice: string,
 }
 
 export type AddHeaders = {

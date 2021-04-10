@@ -1,6 +1,6 @@
 import Client from 'bitcoin-core';
 import Relay from './Relay.json';
-import { getDefaultProvider, Wallet, Contract } from 'ethers';
+import { getDefaultProvider, Wallet, Contract, utils } from 'ethers';
 import { Config } from './types';
 import { getCommonAncestor, getMissingData, getGasPrice, getBchBlock } from './read';
 import { addHeaders, markNewHeaviest } from './write';
@@ -13,10 +13,11 @@ const CONFIG: Config = {
   speed: "fast",
   bchEndpoint: "bchd.strudel.finance",
   bchPort: 8332,
-  relayAddress: "0x9cb9CF602B09e6c8c8B4A9Abd688d1cEe3F1c7a7",
-  ethRpc: "https://rpc.xdaichain.com/",
+  relayAddress: "0x3D4FFC1E924Ed1ee6ABDA7cb9c56Bbd1E26336D4",
+  ethRpc: "https://bsc-dataseed.binance.org/",
   limit: 50,
-  interval: 5,
+  interval: 60,
+  gasPrice: '5',
 }
 
 const log = (msg: string) => {
@@ -26,7 +27,10 @@ const log = (msg: string) => {
 
 // TODO: retry when tx stuck too long -> Promise.race
 const iter = async (client: Client, relay: Contract): Promise<void> => {
-  const gasPrice = await getGasPrice(CONFIG.ethGasStationEndpoint, CONFIG.speed);
+  // for mainnet
+  // const gasPrice = await getGasPrice(CONFIG.ethGasStationEndpoint, CONFIG.speed);
+  // for xDai/BSC
+  const gasPrice = utils.parseUnits(CONFIG.gasPrice, 'gwei');
 
   const ethBlock = await relay.getBestKnownDigest();
   const bchBlock = await getBchBlock(client, relay, ethBlock, CONFIG.limit);
@@ -34,7 +38,10 @@ const iter = async (client: Client, relay: Contract): Promise<void> => {
   log(`Current relay tip: ${ethBlock}`);
   log(`BCH tip in limit range: ${toEthFormat(bchBlock)}`);
 
-  if (toEthFormat(bchBlock) == ethBlock) return;
+  if (toEthFormat(bchBlock) == ethBlock) {
+    log("Nothing to submit.");
+    return;
+  }
 
   const commonAncestor = await getCommonAncestor(client, relay, bchBlock, ethBlock);
   const chain = await getMissingData(client, commonAncestor, bchBlock);
