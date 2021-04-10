@@ -1,0 +1,7 @@
+module.exports = {
+  genesis: "0x00008020d4259cf3a15f191a94da4d5d461a8e97dc57d2821f5871010000000000000000aa45688ce4f5ebdfbb726a7d6af729a9e668b40e685e01c00b9e5bd683bef294567f6d60c891041809a76bfd",
+  height: 682240,
+  anchorHeigth: 661647,
+  anchorParentTime: 1605447844,
+  anchorNBits: "0x1804dafe",
+}

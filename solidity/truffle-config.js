@@ -1,9 +1,8 @@
 /* eslint-disable */
 require('dotenv').config();
 
-const Kit = require('@celo/contractkit')
-
 const HDWalletProvider = require('truffle-hdwallet-provider');
+
 const infuraKey = process.env.SUMMA_RELAY_INFURA_KEY;
 const mnemonic = process.env.MNEMONIC;
 
@@ -11,32 +10,6 @@ const mnemonic = process.env.MNEMONIC;
 const ropsten = {
   provider: () => new HDWalletProvider(mnemonic, `https://ropsten.infura.io/v3/${infuraKey}`),
   network_id: 3,
-  gas: 5500000,
-  confirmations: 2,
-  timeoutBlocks: 200
-}
-
-const kovan = {
-  provider: () => new HDWalletProvider(mnemonic, `https://kovan.infura.io/v3/${infuraKey}`),
-  network_id: 42,
-  gas: 5500000,
-  confirmations: 2,
-  timeoutBlocks: 200
-}
-
-const alfajores = {
-  provider: () => {
-    const provider = new HDWalletProvider(mnemonic, 'http://127.0.0.1:9999'); // sinkhole any requests
-    // slip44
-    const celoBIP44 = "m/44'/52752'/0'/0/0";
-    const hdkey = provider.hdwallet.derivePath(celoBIP44);
-    // Get the privkey and hand it to the kit
-    const privkey = hdkey._hdkey.privateKey.toString('hex');
-    const kit = Kit.newKit('https://alfajores-forno.celo-testnet.org');
-    kit.addAccount(privkey);
-    return kit.web3.currentProvider;
-  },
-  network_id: 44786,
   gas: 5500000,
   confirmations: 2,
   timeoutBlocks: 200
@@ -59,18 +32,33 @@ module.exports = {
       gasPrice: 0x01
     },
 
+    ganache: {
+      host: "localhost",
+      port: 7545,
+    },
+
     ropsten: ropsten,
-    ropsten_test: ropsten,
-
-    kovan: kovan,
-    kovan_test: kovan,
-
-    alfajores: alfajores,
-    alfajores_test: alfajores,
+    xdai: {
+      provider: function() {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://rpc.xdaichain.com/")
+      },
+      network_id: 100,
+      gas: 5000000,
+      gasPrice: 1000000000
+    },
+    bsc: {
+      provider: function() {
+        return new HDWalletProvider(
+          process.env.MNEMONIC,
+          "https://bsc-dataseed.binance.org/")
+      },
+      network_id: 56,
+      gas: 5000000,
+      gasPrice: 5000000000
+    },
   },
-
-  // mocha: {
-  // },
 
   compilers: {
     solc: {
